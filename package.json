@@ -51,7 +51,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc -p tsconfig.build.json && tsdown && cp src/worker.mjs src/sha3.wasm lib/",
+    "build": "rm -rf lib && tsdown && tsc -p tsconfig.build.json && cp src/worker.mjs src/sha3.wasm lib/",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "bundle": "tsdown && cp src/worker.mjs src/sha3.wasm lib/",

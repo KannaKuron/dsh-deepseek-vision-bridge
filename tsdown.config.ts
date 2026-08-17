@@ -76,7 +76,7 @@ export default [
     target: 'es2024',
     dts: false,
     sourcemap: true,
-    clean: true,
+    clean: false,
   },
   // client half (browser, module-loader registration) — official bundle channel
   clientBundle('dsh-vision-bridge', 'client.js'),
