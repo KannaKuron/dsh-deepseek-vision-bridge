@@ -5,9 +5,7 @@
 ## 环境与工具
 
 - 本机已安装 GitHub CLI(`gh`,位于 `/opt/homebrew/bin/gh`)且已完成认证:建仓、推送、开 PR、release 等 GitHub 操作**优先用 `gh`**,不要手动调 API 或让用户去网页点。
-- 发布 npm 用仓库根目录的 `npm publish`(公开包)。注意:
-  - 发布走官方 registry(`registry.npmjs.org`);若网络受限安装依赖,可用镜像 `--registry=https://registry.npmmirror.com`,**但发布绝不能带镜像参数**。
-  - `npm` 的全局缓存(`~/.npm`)若属主不对,加 `--cache ./.npm-cache` 用项目内缓存,发布后删掉。
+- 分发**只走 GitHub**(不发布 npm):安装命令 `dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge`;版本管理用 git tag + GitHub Release。将来若要上 npm,`npm version` + `npm publish` 即可,工程面已备好。
 - 需要 GitHub 交互时优先使用 `gh`,而不是手动调 API 或让用户自己去网页操作。
 
 ## 项目一句话
@@ -58,10 +56,10 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 - 当前目录若作为临时沙箱使用:任务中产生的临时文件(脚本、抓包、测试图)完成后**主动清理**;只删本次任务自己创建的产物,不误删用户已有文件。
 - 提交信息用英文一行式(conventional commits 风格)。
 
-## 发布 checklist
+## 发布 checklist(GitHub-only)
 
 1. `npm run build && npm test` 全绿
-2. `npm pack --dry-run`:文件清单只含 lib 六件套 + 元数据文档,无源码外泄之外的多余物(src/ 不进包,`files` 白名单控制)
-3. 版本号:`npm version patch|minor`(协议无破坏性改动用 patch,新增能力用 minor)
-4. `git push --tags` 后 `npm publish`(prepublishOnly 会自动重跑 build)
-5. GitHub 上打对应 release(`gh release create`)
+2. 版本号:`npm version patch|minor`(协议无破坏性改动用 patch,新增能力用 minor)
+3. `git push --tags`
+4. `gh release create <tag>`(notes 里带安装命令与变更摘要)
+5. 用户侧更新 = 重跑安装命令(拉最新 master;钉 tag 安装则拉对应 tag)

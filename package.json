@@ -7,9 +7,6 @@
     "type": "git",
     "url": "git+https://github.com/KannaKuron/dsh-deepseek-vision-bridge.git"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
   "exports": {
@@ -52,7 +49,6 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "bundle": "tsdown && cp src/worker.mjs src/sha3.wasm lib/",
     "test": "node --test tests/smoke.mjs",
