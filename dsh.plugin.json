@@ -1,6 +1,6 @@
 {
   "id": "dsh-external/dsh-deepseek-vision-bridge",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "./lib/index.js",
   "description": "给纯文本模型装上眼睛:通过 chat.deepseek.com 官网识图模式提供 deepseek_vision 工具与会话内图片自动转写,设置页支持微信扫码/密码/userToken 登录",
   "engines": {

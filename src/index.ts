@@ -24,6 +24,7 @@
 import { spawn } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { existsSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Context } from '@deepseek-ai/cordis'
 // Type-only imports: pull the `declare module '@deepseek-ai/cordis'` augmentations
@@ -469,6 +470,17 @@ export function apply(ctx: Context): void {
     try { offStream() } catch { }
     try { disposeTool() } catch { }
     if (unpatchLlm) { try { unpatchLlm() } catch { } }
+    // Credential hygiene on uninstall: hot reload / update / stop keep the
+    // token (the package directory survives, so re-login is unnecessary);
+    // a real uninstall deletes the package directory — its package.json is
+    // gone by disposal time, which is the signal to drop the stored token.
+    try {
+      const packageJson = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+      if (!existsSync(packageJson)) {
+        console.log('[dsv] package directory gone (uninstall) — dropping stored token')
+        void credentials?.unset(TOKEN_REF).catch(() => { })
+      }
+    } catch { /* never block disposal */ }
   }, 'dsh-deepseek-vision-bridge: cleanup')
 
   console.log('[dsv] host ready; in-chat images ' + (llm ? 'enabled' : 'disabled') + ', token persists via credentials service (DSV_USER_TOKEN)')
