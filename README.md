@@ -1,0 +1,70 @@
+# dsh-vision-bridge
+
+> 给纯文本模型装上眼睛 —— 把 [chat.deepseek.com](https://chat.deepseek.com) 官网「识图模式」桥接进 [DeepSeek Harness (DSH)](https://www.npmjs.com/package/@deepseek-ai/dsh)。
+
+DSH 的后端模型常常没有视觉能力,而 DeepSeek 官网却有内测中的真·多模态识图模式。本插件把官网识图的完整链路(逆向所得:PoW 工作量证明 → 图片上传 → fork 到视觉模型 → 流式补全)封装成 DSH 的能力:
+
+- **🔧 `deepseek_vision` 模型工具** — 传入图片路径或 URL,返回结构化文字描述(整体场景 / 图中全部文字逐字转写 / 关键数据与报错 / 推断上下文),纯文本模型当轮即可回答关于图片的问题
+- **🖼️ 会话内直接发图** — 在 DSH 输入框粘贴 / 拖入图片发送,插件在消息进入模型前自动完成识图转写;会话记录里原图照常显示,识图文本附带 DSH 附件库中的原图路径供追问
+- **📱 设置页登录** — 微信扫码(无头长轮询,与官网同款链路)/ 邮箱手机号密码 / 粘贴 userToken 三种方式;登录态经官方 credentials 服务存于 `~/.dsh/.credentials.yaml`,DSH 重启自动恢复
+- **🧹 用后即删** — 每次识图在官网创建的临时会话在 finally 中删除(成功 / 失败 / 超时全路径),不会污染你网页端的会话列表
+
+## 安装
+
+```bash
+dsh plugin --profile web add dsh-vision-bridge@latest
+```
+
+装完**硬刷新浏览器**(Cmd/Ctrl+Shift+R)。host 半更新才需要重启 DSH,client 改动热刷新即可。
+
+也可以用 npx 免安装:
+
+```bash
+npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-vision-bridge@latest
+```
+
+## 使用
+
+1. 打开 **设置 → DeepSeek 视觉**,选一种方式登录(推荐微信扫码)
+2. 直接在会话输入框发图,或把图片路径丢给模型让它调 `deepseek_vision`
+3. 可在设置页点「识图测试」验证链路
+
+## 工作原理
+
+```
+┌─────────────┐   图片(路径/URL/会话附件)   ┌──────────────────┐
+│  DSH 会话    │ ─────────────────────────▶ │  host: 桥插件      │
+│ (纯文本模型) │ ◀───────────────────────── │  (deepseek_vision │
+└─────────────┘   文字描述(场景/转写/数据)   │   + pre-step 转写) │
+                                            └───────┬──────────┘
+                                                    │ 每次 op spawn 纯 Node worker
+                                                    ▼
+                                   chat.deepseek.com(逆向协议)
+                             PoW wasm(官方 DeepSeekHashV1)→ upload_file
+                             → fork_file_task(vision)→ chat/completion
+                             (SSE, model_type=vision)→ chat_session/delete
+```
+
+- **登录**:微信扫码走 微信开放平台二维码 → 官网服务端换码 → `oauth/get_token`;密码走 `/api/v0/users/login`。token 通过 DSH 官方 `credentials` 服务持久化(ref `DSV_USER_TOKEN`)
+- **识图**:worker(纯 Node 子进程)完成全部协议工作,内嵌官网 PoW wasm(约 26KB,零依赖)
+- **会话内发图**:官方 `agent/pre-step` waterfall 把 image 块替换为识图文本(durable log 不动);`llm/stream` 作为最后防线对纯文本模型做占位替换
+
+## ⚠️ 重要声明
+
+- 本插件调用的是 **chat.deepseek.com 的非官方网页接口**(逆向所得),不是公开 API。接口变更可能导致失效;请自担风险,遵守 DeepSeek 服务条款
+- 你的账号在 DeepSeek 侧产生的用量、风控(如验证码频控)由你的账号自身承担
+- PoW wasm 为官网原始文件的内嵌副本,仅用于通过其反爬校验
+
+## 从源码构建
+
+```bash
+git clone https://github.com/omdsh-dev/dsh-vision-bridge.git
+cd dsh-vision-bridge
+npm install
+npm run build   # tsc 类型 + tsdown 打包 + 拷贝 worker/wasm
+npm test        # 冒烟测试(worker 协议面 + 产物一致性)
+```
+
+## License
+
+[MIT](./LICENSE)
