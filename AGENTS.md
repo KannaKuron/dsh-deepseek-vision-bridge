@@ -78,7 +78,7 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 2. 版本号:`npm version patch|minor`(协议无破坏性改动用 patch,新增能力用 minor)
 3. `git push --tags`
 4. `gh release create <tag>`(notes 里带安装命令与变更摘要)
-5. 用户侧更新 = 重跑安装命令(拉最新 master;钉 tag 安装则拉对应 tag)
+5. 用户侧更新 = `cd <profile 目录> && pnpm update dsh-deepseek-vision-bridge`(锁文件钉 commit,重跑安装命令**不会**重新解析;管理页「已是最新」只对照锁文件——git 通道的显示盲区)
 
 ### 同版本内补提交后,更新已有 release(不产生 untagged 草稿)
 

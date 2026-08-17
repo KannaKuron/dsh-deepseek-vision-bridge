@@ -21,7 +21,11 @@ dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-b
 
 Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only needed for host-half updates; client changes hot-reload.
 
-> Updating: re-run the same install command (it pulls the repo's latest master). The install builds via the `prepare` script and works on macOS/Linux/Windows alike (no Unix-only commands in the build).
+> Updating: do **not** just re-run the install command — the lockfile pins git dependencies to the commit resolved at install time, and the manager's "up to date" badge compares against the lockfile only. To actually update, run in the profile directory:
+> ```bash
+> cd ~/.dsh/profiles/web && pnpm update dsh-deepseek-vision-bridge
+> ```
+> (Windows: `cd %USERPROFILE%\\.dsh\\profiles\\web`). Host-half changes require a DSH restart. The install builds via the `prepare` script and works on macOS/Linux/Windows alike.
 
 <details>
 <summary><b>When pnpm blocks the install (supply-chain cooldown / build-script gate)</b></summary>
