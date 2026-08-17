@@ -43,19 +43,20 @@
     "lib/client-registry.js",
     "lib/worker.mjs",
     "lib/sha3.wasm",
-    "lib/types/**/*.d.ts",
     "cordis.patch.yml",
     "dsh.plugin.json",
     "README.md",
     "README_EN.md",
-    "LICENSE"
+    "LICENSE",
+    "lib/types/**/*.d.ts"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsdown && tsc -p tsconfig.build.json && cp src/worker.mjs src/sha3.wasm lib/",
+    "build": "node scripts/build.mjs",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
     "bundle": "tsdown && cp src/worker.mjs src/sha3.wasm lib/",
-    "test": "node --test tests/smoke.mjs"
+    "test": "node --test tests/smoke.mjs",
+    "prepare": "node scripts/prepare.mjs"
   },
   "keywords": [
     "dsh",
