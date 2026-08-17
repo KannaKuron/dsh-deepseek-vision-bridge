@@ -11,11 +11,17 @@ DSH sessions often run on text-only models, while chat.deepseek.com ships a real
 
 ## Install
 
+Install straight from GitHub (not on npm for now):
+
 ```bash
-dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
+dsh plugin --profile web add KannaKuron/dsh-deepseek-vision-bridge
+# or the full URL
+dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge
 ```
 
 Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only needed for host-half updates; client changes hot-reload.
+
+> Updating: re-run the same install command (it pulls the repo's latest master).
 
 ## Usage
 

@@ -11,8 +11,12 @@ DSH 的后端模型常常没有视觉能力,而 DeepSeek 官网却有内测中�
 
 ## 安装
 
+直接从 GitHub 安装(暂未发布 npm):
+
 ```bash
-dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
+dsh plugin --profile web add KannaKuron/dsh-deepseek-vision-bridge
+# 或完整地址
+dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge
 ```
 
 装完**硬刷新浏览器**(Cmd/Ctrl+Shift+R)。host 半更新才需要重启 DSH,client 改动热刷新即可。
@@ -20,8 +24,10 @@ dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
 也可以用 npx 免安装:
 
 ```bash
-npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
+npx -y --package @deepseek-ai/dsh dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge
 ```
+
+> 更新:重跑同一条安装命令即可(拉取仓库最新 master)。
 
 ## 使用
 
