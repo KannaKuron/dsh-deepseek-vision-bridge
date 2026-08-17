@@ -21,11 +21,7 @@ dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-b
 
 Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only needed for host-half updates; client changes hot-reload.
 
-> Updating: do **not** just re-run the install command — the lockfile pins git dependencies to the commit resolved at install time, and the manager's "up to date" badge compares against the lockfile only. To actually update, run in the profile directory:
-> ```bash
-> cd ~/.dsh/profiles/web && pnpm update dsh-deepseek-vision-bridge
-> ```
-> (Windows: `cd %USERPROFILE%\\.dsh\\profiles\\web`). Host-half changes require a DSH restart. The install builds via the `prepare` script and works on macOS/Linux/Windows alike.
+> Updating: the plugin market automatically compares the lockfile commit against GitHub HEAD for git-installed plugins and shows an "update" button when they differ — one click re-resolves HEAD and rebuilds on install. Caveat: the check depends on api.github.com reachability; during GitHub incidents or rate limiting it fails silently (showing "up to date" while a newer version exists) — force a re-check via `/dsh-market/updates?force=1`. Host-half changes need a DSH restart after updating. CLI equivalent: `dsh plugin --profile web add github:KannaKuron/dsh-deepseek-vision-bridge` (re-resolves HEAD). Installs/updates build via `prepare` on macOS/Linux/Windows alike.
 
 <details>
 <summary><b>When pnpm blocks the install (supply-chain cooldown / build-script gate)</b></summary>

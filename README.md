@@ -27,11 +27,7 @@ dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-b
 npx -y --package @deepseek-ai/dsh dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge
 ```
 
-> 更新:**不要**只重跑安装命令——锁文件会把 git 依赖钉在安装时的 commit,管理页显示的「已是最新」只对照锁文件。真正更新要在 profile 目录执行:
-> ```bash
-> cd ~/.dsh/profiles/web && pnpm update dsh-deepseek-vision-bridge
-> ```
-> (Windows:`cd %USERPROFILE%\.dsh\profiles\web`)。host 半变更需重启 DSH。安装时通过 `prepare` 脚本现场构建,macOS/Linux/Windows 均支持。
+> 更新:插件市场页对 git 安装的插件自动对比锁文件 commit 与 GitHub HEAD,有新版本会直接出现「更新」按钮,点击即可(内部重新解析 HEAD 并现场构建)。注意:更新检测依赖 api.github.com 连通,GitHub 故障/限流期间检测会静默失败(显示"已是最新"但实际有新版),可访问 `/dsh-market/updates?force=1` 强制刷新确认。host 半变更更新后需重启 DSH。命令行等价操作:`dsh plugin --profile web add github:KannaKuron/dsh-deepseek-vision-bridge`(重新解析 HEAD)。安装/更新均通过 `prepare` 现场构建,macOS/Linux/Windows 支持。
 
 <details>
 <summary><b>安装被 pnpm 拦下时(供应链保护 / 构建脚本放行)</b></summary>
