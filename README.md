@@ -83,6 +83,20 @@ npx -y --package @deepseek-ai/dsh dsh plugin --profile web add https://github.co
 - 你的账号在 DeepSeek 侧产生的用量、风控(如验证码频控)由你的账号自身承担
 - PoW wasm 为官网原始文件的内嵌副本,仅用于通过其反爬校验
 
+<details>
+<summary><b>卸载与凭据清理</b></summary>
+
+插件市场页「卸载」会**自动清除**存储的 DeepSeek token(卸载流程先删包再卸载插件,插件检测到包目录消失即 unset `DSV_USER_TOKEN`)。
+
+命令行卸载(`dsh plugin --profile web remove dsh-deepseek-vision-bridge`)不经过插件代码,token 会残留;如需彻底清除,任选其一:
+
+```bash
+# 方式一:编辑 ~/.dsh/.credentials.yaml,删除 DSV_USER_TOKEN 行
+# 方式二(下次再装市场版后用市场页卸载,自动清理)
+```
+
+</details>
+
 ## 从源码构建
 
 ```bash

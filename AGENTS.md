@@ -59,6 +59,12 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 - 请求需带浏览器级 UA(裸 curl 会被华为 WAF 429)。
 - 接口随时可能变:失败时先看 worker 返回的 `error` 字段(已带 HTTP 状态与响应体片段)。
 
+## 卸载与凭据清理(边界认知)
+
+- **市场页卸载**:先 `pnpm remove` 删包、后 `hotUnmount` dispose——disposal 里检查 `../package.json` 消失 → unset `DSV_USER_TOKEN`(v0.2.1 起,已验证)
+- **命令行卸载**(`dsh plugin --profile web remove ...`):不触发任何插件代码(下次 DSH 重启时插件才静默消失,dispose 不会跑),token 残留——这是 DSH 卸载架构的边界,插件侧无法感知;README 已指引手动清理
+- 改动此处时保持两分支语义:重载/更新/停止**保留** token,只有包目录消失才清
+
 ## 安全红线
 
 - **绝不提交任何真实 token / 凭据 / 账号信息**。登录态只存 DSH 官方 credentials 服务(`~/.dsh/.credentials.yaml`,ref `DSV_USER_TOKEN`),代码里只出现 ref 名。

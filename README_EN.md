@@ -60,6 +60,15 @@ Every operation spawns a plain-Node worker (`src/worker.mjs`) that speaks the re
 - This plugin talks to **unofficial, reverse-engineered web endpoints** of chat.deepseek.com — not a public API. Breakage may follow site changes; use at your own risk and in line with DeepSeek's ToS.
 - Usage and risk-control on your DeepSeek account is your own account's business.
 
+<details>
+<summary><b>Uninstall & credential cleanup</b></summary>
+
+The market page's "uninstall" button clears the stored DeepSeek token automatically (the package directory is deleted before the plugin's disposal runs, which triggers the unset).
+
+CLI removal (`dsh plugin --profile web remove dsh-deepseek-vision-bridge`) bypasses plugin code entirely, so the token survives; to purge it, either edit `~/.dsh/.credentials.yaml` (drop the `DSV_USER_TOKEN` line) or reinstall once and uninstall through the market page.
+
+</details>
+
 ## Build from source
 
 ```bash
