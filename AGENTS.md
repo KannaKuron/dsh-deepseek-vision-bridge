@@ -16,7 +16,7 @@
 
 | 路径 | 作用 |
 |---|---|
-| `src/index.ts` | host 半:`/dsv/api/*` HTTP 路由、`deepseek_vision` 工具注册、`agent/pre-step` 图片→文字转写、`llm.resolveModelInfo` 能力补丁、`llm/stream` 兜底、credentials 持久化 |
+| `src/index.ts` | host 半:`/dsv/api/*` HTTP 路由、`deepseek_vision` 工具注册、`agent/pre-step` 图片→占位卡(懒转写)、`llm.resolveModelInfo` 能力补丁、`llm/stream` 兜底(同款占位卡)、credentials 持久化 |
 | `src/worker.mjs` | 协议核心(纯 Node 子进程,每次 op 独立 spawn):PoW wasm、上传→fork→SSE 识图、微信扫码长轮询、会话 finally 删除 |
 | `src/sha3.wasm` | 官网 PoW wasm 原件(DeepSeekHashV1,零 import);**不要反编译重写**——实测纯算法复刻与 wasm 答案不一致,必须跑原 wasm |
 | `src/client/index.tsx` | client 半:设置页「DeepSeek 视觉」(React.createElement,无 JSX) |
@@ -40,6 +40,16 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 - `scripts/*.mjs` 里**禁止 Unix-only 命令**(`rm -rf`、`cp`、`ln`…):用 `node:fs` 的 `rmSync/cpSync/mkdirSync`。
 - 调 `node_modules/.bin` 下的本地 bin:Windows 下是 `.cmd` shim,且 Node 自 CVE-2024-27980 后拒绝无 shell 直跑 `.cmd`——按 `scripts/build.mjs` 的 `bin()/run()` 模式写(IS_WIN 时拼 `.cmd` 路径 + `shell: true`)。
 - 探测 devDependencies 是否存在时,`.bin/tsdown` 与 `.bin/tsdown.cmd` 都要查。
+
+## 懒转写架构(2026-08-17 重构,别改回急转写!)
+
+早期版本在 pre-step 里**立即**调视觉 API 把图片换成固定四段式转写——错在:prompt 与用户意图脱节、模型永远拿不到原图抓手。现行设计:
+
+- pre-step 只做**零 IO** 替换:image 块 → 占位卡文本块(媒体类型/尺寸/大小 + 从 `attachmentId` 推导的稳定对象路径 + 引导语),不调网络、不阻塞
+- pre-step 的替换结果会以 `surfaceOp:'append'` 落到 **model-only surface**(源码实证:agent-loop 把 decision.messages 逐条 `session.append('user/message', ..., {surfaceOp:'append'})`;UI 的 human transcript 永远显示 append-origin 原图,"replacement copies stay model-only")——所以占位卡对模型是**持久可见**的,后续每轮都在
+- 模型自己决定何时/是否调 `deepseek_vision`,prompt 由模型结合当轮用户意图写(工具描述里已引导)
+- `llm/stream` 兜底对"到达纯文本模型的历史图块"(插件启用前的老会话)生成**同款占位卡**,保证抓手一致
+- 占位卡路径推导:`attachmentId` 形如 `sha256:<64hex>` → `<DSH_HOME>/attachments/v1/objects/<前2位>/<64hex>`,无需读字节;worker 的 analyze 侧同样会校验对象存在
 
 ## 协议速查(逆向结论,2026-08 实测)
 

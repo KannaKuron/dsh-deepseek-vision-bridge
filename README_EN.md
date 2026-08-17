@@ -5,7 +5,7 @@
 DSH sessions often run on text-only models, while chat.deepseek.com ships a real multimodal image-understanding mode in beta. This plugin wraps the site's full vision pipeline (reverse-engineered: proof-of-work → image upload → fork to the vision model → streaming completion) as DSH capabilities:
 
 - **🔧 `deepseek_vision` model tool** — pass image paths or URLs, get back a structured textual description (scene / verbatim text transcription / key data & errors / inferred context), so a text-only model can answer questions about images in the same turn
-- **🖼️ In-chat images** — paste or drop images straight into the DSH composer; the plugin transcribes them before the step enters the model. The durable log keeps the original image; the transcription carries the DSH attachment-store path for follow-ups
+- **🖼️ In-chat images** — paste or drop images straight into the DSH composer; the plugin swaps each image for a path-carrying placeholder card (the transcript keeps showing the original). The model decides — per your intent, per turn — when and what to ask through the vision tool, and can revisit the original anytime
 - **📱 Settings-page login** — WeChat QR (headless long-poll, the same flow the site uses) / email-or-mobile + password / paste a userToken. The token persists through the official credentials service in `~/.dsh/.credentials.yaml` and survives DSH restarts
 - **🧹 Delete-after-use** — every temporary web session is deleted in a `finally` block (success / failure / timeout alike), so your web session list stays clean
 

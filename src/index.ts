@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Context } from '@deepseek-ai/cordis'
 // Type-only imports: pull the `declare module '@deepseek-ai/cordis'` augmentations
-// (Context.llm / Context.tools / Context.attachments / the agent+llm events) into
+// (Context.llm / Context.tools / the agent+llm events) into
 // this compilation without any runtime dependency.
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-llm'
@@ -42,7 +42,7 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 export const name = 'dsh-deepseek-vision-bridge'
 
 /** Services required before mounting. */
-export const inject = ['webServer', 'tools', 'llm', 'attachments', 'credentials']
+export const inject = ['webServer', 'tools', 'llm', 'credentials']
 
 const TOKEN_REF = credentialRef('DSV_USER_TOKEN')
 const API_PREFIX = '/dsv/api'
@@ -297,40 +297,40 @@ export function apply(ctx: Context): void {
     console.error('[dsv] llm.resolveModelInfo unavailable — in-chat images disabled, the tool still works')
   }
 
-  // ② In-chat images → vision transcription before the model step.
-  function b64FromBytes(bytes: Uint8Array): string {
-    let s = ''
-    const CHUNK = 0x8000
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-      s += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
-    }
-    return btoa(s)
+  // ② In-chat images → lazy placeholder cards. The pre-step waterfall swaps
+  // each image block for a text card carrying the ORIGINAL image's stable
+  // content-addressed path; the swapped copy lands on the model-only surface
+  // (the UI transcript keeps showing the original image). The MODEL then
+  // decides — per user intent, per turn — whether/what to ask through the
+  // deepseek_vision tool, instead of being force-fed one eager transcription
+  // with a generic prompt.
+  function attachmentObjectPath(ref: ImageAttachmentRef): string | null {
+    // attachmentId is "sha256:<64hex>"; objects live under objects/<2>/<64>
+    const id = String(ref.attachmentId || '')
+    const m = /^sha256:([a-f0-9]{64})$/.exec(id)
+    if (!m) return null
+    const hex = m[1]
+    const home = process.env.DSH_HOME
+      ?? (process.env.HOME ? `${process.env.HOME}/.dsh` : null)
+    if (!home) return null
+    return `${home}/attachments/v1/objects/${hex.slice(0, 2)}/${hex}`
   }
 
-  async function describeImageBlocks(blocks: unknown[]): Promise<string> {
-    if (state.token === null) throw new Error('NOT_LOGGED_IN(请在 设置 → DeepSeek 视觉 登录)')
-    const list: { name: string; mime: string; b64: string }[] = []
-    for (const b of blocks) {
-      const block = b as { attachment?: ImageAttachmentRef }
-      const ref = block && block.attachment
-      if (!ref) continue
-      const stored = await ctx.attachments.readImage(ref)
-      const data = stored && stored.data
-      if (!data) continue
-      const ext = String(ref.mediaType || 'image/png').split('/')[1] || 'png'
-      list.push({ name: `image_${list.length}.${ext}`, mime: ref.mediaType || 'image/png', b64: b64FromBytes(data) })
-    }
-    if (!list.length) throw new Error('无法读取图片附件')
-    const prompt = list.length > 1
-      ? `共 ${list.length} 张图片。请逐张全面分析,每张分别给出:1)整体描述(场景/主体/布局) 2)图中所有文字的逐字转写 3)关键信息(数据/UI 状态/异常报错) 4)推断与上下文;最后说明图片之间的关系(如有)。用中文分条作答。`
-      : undefined
-    const r = await runWorker({ op: 'analyze', token: state.token, imagesStdin: true, prompt }, JSON.stringify(list))
-    if (!r || !r.ok) throw new Error((r && r.error) || '识图失败')
-    const paths = Array.isArray(r.paths) ? r.paths.filter(Boolean) : []
-    const refNote = paths.length
-      ? `;原图: ${paths.join(' , ')}(DSH 附件库,可用 deepseek_vision 追问)`
-      : ';原图在 DSH 附件库中'
-    return `[DeepSeek 视觉识图结果${list.length > 1 ? `(${list.length} 张)` : ''}${refNote}]\n${r.text ?? ''}`
+  function imageCardText(ref: ImageAttachmentRef, index: number, total: number): string {
+    const path = attachmentObjectPath(ref)
+    const parts = [
+      `[图片 ${index}/${total}`,
+      String(ref.mediaType || 'image/png').split('/')[1] || 'png',
+      ref.width && ref.height ? `${ref.width}×${ref.height}` : null,
+      ref.bytes ? `${Math.round(ref.bytes / 1024)}KB` : null,
+      '本会话模型无视觉能力',
+    ].filter(Boolean)
+    const head = parts.join(' · ') + ']'
+    const body = path
+      ? `原图路径: ${path}`
+      : '原图在 DSH 附件库(content-addressed,attachmentId 见本条消息元数据)'
+    const guide = '请用 deepseek_vision 工具分析此图:prompt 由你结合用户当前意图撰写(整体内容/全部文字转写/关键信息/用户真正想问的点),不要套用固定模板;无需分析时可忽略。'
+    return `${head}\n${body}\n${guide}`
   }
 
   function copyMessageWithContent<T extends { content: unknown }>(m: T, content: unknown[]): T {
@@ -352,25 +352,30 @@ export function apply(ctx: Context): void {
       const content: unknown = m.content
       if (!Array.isArray(content)) { out.push(m); continue }
       const blocks = content as unknown[]
-      const imgs = blocks.filter(b => (b as { type?: string } | null)?.type === 'image')
-      if (!imgs.length) { out.push(m); continue }
-      let text: string
-      try {
-        text = await describeImageBlocks(imgs)
-      } catch (e) {
-        text = `[DeepSeek 视觉未能处理本条消息中的图片:${e instanceof Error ? e.message : String(e)};原图仍保留在会话记录中,登录后可让我用 deepseek_vision 工具补看]`
+      const imgRefs: ImageAttachmentRef[] = []
+      for (const b of blocks) {
+        const ref = (b as { attachment?: ImageAttachmentRef } | null)?.attachment
+        if (ref) imgRefs.push(ref)
       }
+      if (!imgRefs.length) { out.push(m); continue }
       changed = true
-      const newContent = blocks.filter(b => (b as { type?: string } | null)?.type !== 'image')
-      newContent.push({ type: 'text', text })
+      const total = imgRefs.length
+      let i = 0
+      const newContent = blocks.map(b => {
+        const ref = (b as { attachment?: ImageAttachmentRef } | null)?.attachment
+        if (!ref) return b
+        i += 1
+        return { type: 'text', text: imageCardText(ref, i, total) }
+      })
       out.push(copyMessageWithContent(m, newContent))
     }
     if (!changed) return decision
     return { kind: 'enter', messages: out }
   })
 
-  // ③ llm/stream net: placeholder any image block that still reaches a
-  // genuinely text-only model (checked through the UNPATCHED resolver).
+  // ③ llm/stream net: swap any image block that still reaches a genuinely
+  // text-only model (checked through the UNPATCHED resolver) for the same
+  // path-carrying card, so even pre-plugin history keeps the tool handle.
   const modalityCache: Record<string, boolean> = {}
   async function modelIsTextOnly(provider: string, model: string): Promise<boolean> {
     const key = `${provider}/${model}`
@@ -396,9 +401,17 @@ export function apply(ctx: Context): void {
         if (await modelIsTextOnly(provider, model)) {
           for (const m of msgs!) {
             if (Array.isArray(m.content) && m.content.some(b => (b as { type?: string } | null)?.type === 'image')) {
-              m.content = m.content.map(b => ((b as { type?: string } | null)?.type === 'image')
-                ? { type: 'text', text: '[此处原为一张图片,已由 DeepSeek 视觉转为文字描述,见对应消息]' }
-                : b)
+              const refs = m.content
+                .map(b => (b as { attachment?: ImageAttachmentRef } | null)?.attachment)
+                .filter(Boolean) as ImageAttachmentRef[]
+              const total = refs.length
+              let i = 0
+              m.content = m.content.map(b => {
+                const ref = (b as { attachment?: ImageAttachmentRef } | null)?.attachment
+                if (!ref) return b
+                i += 1
+                return { type: 'text', text: imageCardText(ref, i, total) }
+              })
             }
           }
         }
@@ -410,7 +423,7 @@ export function apply(ctx: Context): void {
   // ---- model tool ----
   const disposeTool = ctx.tools.register({
     name: 'deepseek_vision',
-    description: '用 DeepSeek 官网识图模式分析图片,返回文字描述。当前运行模型没有视觉能力:凡用户给出图片(路径/URL)或要求看图、识图、读截图、提取图中文字时,调用本工具,不要凭空猜测图片内容。硬性要求:prompt 必须附带一句针对该图的完整提问,覆盖——整体内容、图中所有文字的逐字转写、值得关注的关键信息(数据/UI 状态/异常报错),并结合用户当前意图;禁止留空或泛泛一句。images: [{path}|{url}](1-5 张)。需要用户先在 设置 → DeepSeek 视觉 登录;未登录时返回 NOT_LOGGED_IN,应提示用户去设置登录。调用产生的临时会话用后自动删除。',
+    description: '用 DeepSeek 官网识图模式分析图片,返回文字描述——本会话模型没有视觉能力,这是你「看图」的唯一途径。用户消息里的图片会以占位卡出现(含原图稳定路径):拿到占位卡、用户提到图、或你需要看某张图时,调用本工具。prompt 由你结合用户当前意图撰写,覆盖与意图相关的方面(通常包括:整体内容、图中文字逐字转写、关键数据/UI 状态/报错、用户真正想问的点),不要套用固定模板、不要泛泛一句;多张图可一次调用(说明分别分析)或按需分次。images: [{path}|{url}](1-5 张),占位卡里的路径可直接作为 path 使用。需要用户先在 设置 → DeepSeek 视觉 登录;未登录返回 NOT_LOGGED_IN,应提示用户去设置登录。临时会话用后自动删除。',
     parameters: {
       images: {
         type: 'array',
