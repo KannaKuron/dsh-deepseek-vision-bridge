@@ -58,7 +58,7 @@ npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-deepseek-visi
 ## 从源码构建
 
 ```bash
-git clone https://github.com/omdsh-dev/dsh-deepseek-vision-bridge.git
+git clone https://github.com/KannaKuron/dsh-deepseek-vision-bridge.git
 cd dsh-deepseek-vision-bridge
 npm install
 npm run build   # tsc 类型 + tsdown 打包 + 拷贝 worker/wasm

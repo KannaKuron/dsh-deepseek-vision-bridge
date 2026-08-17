@@ -35,7 +35,7 @@ Every operation spawns a plain-Node worker (`src/worker.mjs`) that speaks the re
 ## Build from source
 
 ```bash
-git clone https://github.com/omdsh-dev/dsh-deepseek-vision-bridge.git
+git clone https://github.com/KannaKuron/dsh-deepseek-vision-bridge.git
 cd dsh-deepseek-vision-bridge
 npm install
 npm run build
