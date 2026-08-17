@@ -62,7 +62,7 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 ## 卸载与凭据清理(边界认知)
 
 - **市场页卸载**:先 `pnpm remove` 删包、后 `hotUnmount` dispose——disposal 里检查 `../package.json` 消失 → unset `DSV_USER_TOKEN`(v0.2.1 起,已验证)
-- **命令行卸载**(`dsh plugin --profile web remove ...`):不触发任何插件代码(下次 DSH 重启时插件才静默消失,dispose 不会跑),token 残留——这是 DSH 卸载架构的边界,插件侧无法感知;README 已指引手动清理
+- **命令行卸载**(`dsh plugin --profile web remove ...`)= 市场卸载的前半句(同一条 dsh 命令,独立进程执行,DSH 进程不 watch node_modules、收不到通知)——差别只在没有后半句的进程内 dispose。后果分两种:卸载后若插件 fiber 因任何原因被 dispose(重载/热更新/会话内事件),包目录已消失,同一个检查会清掉 token ✅;若直接重启 DSH,插件从未再挂载、dispose 永不执行 → token 残留 ❌(DSH 架构边界:插件无法感知"重启前的卸载";宿主侧的孤儿凭据清理才能根治)。README 已指引手动清理
 - 改动此处时保持两分支语义:重载/更新/停止**保留** token,只有包目录消失才清
 
 ## 安全红线
