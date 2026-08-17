@@ -21,7 +21,7 @@ dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-b
 
 Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only needed for host-half updates; client changes hot-reload.
 
-> Updating: re-run the same install command (it pulls the repo's latest master).
+> Updating: re-run the same install command (it pulls the repo's latest master). The install builds via the `prepare` script and works on macOS/Linux/Windows alike (no Unix-only commands in the build).
 
 <details>
 <summary><b>When pnpm blocks the install (supply-chain cooldown / build-script gate)</b></summary>

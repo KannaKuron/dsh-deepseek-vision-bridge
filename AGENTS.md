@@ -35,6 +35,12 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 
 改动后必须:`build` 通过 + `test` 全绿 + `npm pack --dry-run` 里 **lib/ 六件套齐全**(index.js、client.js、client-registry.js、worker.mjs、sha3.wasm、types/index.d.ts)。
 
+### 构建脚本必须跨平台(Windows 用户在用)
+
+- `scripts/*.mjs` 里**禁止 Unix-only 命令**(`rm -rf`、`cp`、`ln`…):用 `node:fs` 的 `rmSync/cpSync/mkdirSync`。
+- 调 `node_modules/.bin` 下的本地 bin:Windows 下是 `.cmd` shim,且 Node 自 CVE-2024-27980 后拒绝无 shell 直跑 `.cmd`——按 `scripts/build.mjs` 的 `bin()/run()` 模式写(IS_WIN 时拼 `.cmd` 路径 + `shell: true`)。
+- 探测 devDependencies 是否存在时,`.bin/tsdown` 与 `.bin/tsdown.cmd` 都要查。
+
 ## 协议速查(逆向结论,2026-08 实测)
 
 - 登录:微信扫码 = `open.weixin.qq.com/connect/qrConnect`(生产 appid `wx932d4fdaf46d5611`)→ 长轮询 `long.open.weixin.qq.com/connect/l/qrconnect`(408 等待/404 已扫/405 确认带 code/402 过期/403 取消)→ 官网 `/api/v0/users/oauth/wechat/callback` 307 带 nonce → `/api/v0/users/oauth/get_token`。密码 = `/api/v0/users/login`。
@@ -63,3 +69,16 @@ npm pack --dry-run --cache ./.npm-cache   # 发布前检查打包内容
 3. `git push --tags`
 4. `gh release create <tag>`(notes 里带安装命令与变更摘要)
 5. 用户侧更新 = 重跑安装命令(拉最新 master;钉 tag 安装则拉对应 tag)
+
+### 同版本内补提交后,更新已有 release(不产生 untagged 草稿)
+
+**不要**先删远端 tag 再推新 tag(会把 release 打成 untagged 草稿)。正确顺序:
+
+```bash
+git tag -f v0.1.0 -m "..."     # 本地强制重钉到新 commit
+git push -f origin v0.1.0      # force-push,release 保持挂在 tag 名上
+gh release edit v0.1.0 --notes "..."   # 只改 notes
+# 若不慎变成 draft:gh release edit v0.1.0 --draft=false
+```
+
+验证:`gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq '.object.sha'` 是 annotated tag 对象的 sha,**不是 commit**;解引用用 `git rev-parse <tag>^{commit}` 或 API 的 `git/tags/<sha>` 再取 `.object.sha`。

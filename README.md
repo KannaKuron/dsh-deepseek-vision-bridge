@@ -27,7 +27,7 @@ dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-b
 npx -y --package @deepseek-ai/dsh dsh plugin --profile web add https://github.com/KannaKuron/dsh-deepseek-vision-bridge
 ```
 
-> 更新:重跑同一条安装命令即可(拉取仓库最新 master)。
+> 更新:重跑同一条安装命令即可(拉取仓库最新 master)。安装时通过 `prepare` 脚本现场构建,macOS/Linux/Windows 均支持(构建脚本无 Unix-only 命令)。
 
 <details>
 <summary><b>安装被 pnpm 拦下时(供应链保护 / 构建脚本放行)</b></summary>
