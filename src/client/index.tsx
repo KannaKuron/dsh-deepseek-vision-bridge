@@ -1,5 +1,5 @@
 /**
- * dsh-vision-bridge — client half.
+ * dsh-deepseek-vision-bridge — client half.
  *
  * Contributes the "DeepSeek 视觉" settings section: login state card,
  * WeChat QR login (headless long-poll through the host's HTTP route),
@@ -64,7 +64,7 @@ let styleEl: HTMLStyleElement | null = null
 function ensureStyles(): void {
   if (styleEl) return
   styleEl = document.createElement('style')
-  styleEl.setAttribute('data-plugin', 'dsh-vision-bridge')
+  styleEl.setAttribute('data-plugin', 'dsh-deepseek-vision-bridge')
   styleEl.textContent = CSS
   document.head.appendChild(styleEl)
 }
@@ -247,5 +247,5 @@ export function apply(ctx: Context): void {
     try { off() } catch { }
     try { if (disposeReg) disposeReg() } catch { }
     if (styleEl) { try { styleEl.remove() } catch { } styleEl = null }
-  }, 'dsh-vision-bridge: client cleanup')
+  }, 'dsh-deepseek-vision-bridge: client cleanup')
 }

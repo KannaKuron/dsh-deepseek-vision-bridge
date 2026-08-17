@@ -1,5 +1,5 @@
 /**
- * dsh-vision-bridge — host half.
+ * dsh-deepseek-vision-bridge — host half.
  *
  * Bridges chat.deepseek.com's (reverse-engineered, unofficial) vision mode
  * into DSH so text-only models can still "see" images:
@@ -39,7 +39,7 @@ import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 
 /** Plugin identity for cordis.yml rows. */
-export const name = 'dsh-vision-bridge'
+export const name = 'dsh-deepseek-vision-bridge'
 
 /** Services required before mounting. */
 export const inject = ['webServer', 'tools', 'llm', 'attachments', 'credentials']
@@ -456,7 +456,7 @@ export function apply(ctx: Context): void {
     try { offStream() } catch { }
     try { disposeTool() } catch { }
     if (unpatchLlm) { try { unpatchLlm() } catch { } }
-  }, 'dsh-vision-bridge: cleanup')
+  }, 'dsh-deepseek-vision-bridge: cleanup')
 
   console.log('[dsv] host ready; in-chat images ' + (llm ? 'enabled' : 'disabled') + ', token persists via credentials service (DSV_USER_TOKEN)')
 }

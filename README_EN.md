@@ -1,4 +1,4 @@
-# dsh-vision-bridge
+# dsh-deepseek-vision-bridge
 
 > Eyes for text-only agents — bridges chat.deepseek.com's (unofficial) vision mode into DeepSeek Harness (DSH).
 
@@ -12,7 +12,7 @@ DSH sessions often run on text-only models, while chat.deepseek.com ships a real
 ## Install
 
 ```bash
-dsh plugin --profile web add dsh-vision-bridge@latest
+dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
 ```
 
 Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only needed for host-half updates; client changes hot-reload.
@@ -35,8 +35,8 @@ Every operation spawns a plain-Node worker (`src/worker.mjs`) that speaks the re
 ## Build from source
 
 ```bash
-git clone https://github.com/omdsh-dev/dsh-vision-bridge.git
-cd dsh-vision-bridge
+git clone https://github.com/omdsh-dev/dsh-deepseek-vision-bridge.git
+cd dsh-deepseek-vision-bridge
 npm install
 npm run build
 npm test

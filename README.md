@@ -1,4 +1,4 @@
-# dsh-vision-bridge
+# dsh-deepseek-vision-bridge
 
 > 给纯文本模型装上眼睛 —— 把 [chat.deepseek.com](https://chat.deepseek.com) 官网「识图模式」桥接进 [DeepSeek Harness (DSH)](https://www.npmjs.com/package/@deepseek-ai/dsh)。
 
@@ -12,7 +12,7 @@ DSH 的后端模型常常没有视觉能力,而 DeepSeek 官网却有内测中�
 ## 安装
 
 ```bash
-dsh plugin --profile web add dsh-vision-bridge@latest
+dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
 ```
 
 装完**硬刷新浏览器**(Cmd/Ctrl+Shift+R)。host 半更新才需要重启 DSH,client 改动热刷新即可。
@@ -20,7 +20,7 @@ dsh plugin --profile web add dsh-vision-bridge@latest
 也可以用 npx 免安装:
 
 ```bash
-npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-vision-bridge@latest
+npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-deepseek-vision-bridge@latest
 ```
 
 ## 使用
@@ -58,8 +58,8 @@ npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-vision-bridge
 ## 从源码构建
 
 ```bash
-git clone https://github.com/omdsh-dev/dsh-vision-bridge.git
-cd dsh-vision-bridge
+git clone https://github.com/omdsh-dev/dsh-deepseek-vision-bridge.git
+cd dsh-deepseek-vision-bridge
 npm install
 npm run build   # tsc 类型 + tsdown 打包 + 拷贝 worker/wasm
 npm test        # 冒烟测试(worker 协议面 + 产物一致性)

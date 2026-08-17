@@ -1,4 +1,4 @@
-// dsh-vision-bridge worker — runs under plain Node (>=18). One JSON line on stdout per op.
+// dsh-deepseek-vision-bridge worker — runs under plain Node (>=18). One JSON line on stdout per op.
 // usage: node worker.mjs '<base64 argv json>'  (stdin carries images for op=analyze&imagesStdin)
 // ops: check | login | analyze | wxqr | wxpoll | wxlogin
 //

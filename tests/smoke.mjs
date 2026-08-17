@@ -1,4 +1,4 @@
-// Smoke tests for dsh-vision-bridge: worker protocol surface + build outputs.
+// Smoke tests for dsh-deepseek-vision-bridge: worker protocol surface + build outputs.
 // Run: npm test  (node --test tests/)
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -66,11 +66,11 @@ test('pow wasm asset ships next to the worker', () => {
 test('manifest and package agree on identity', async () => {
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const manifest = JSON.parse(readFileSync(join(root, 'dsh.plugin.json'), 'utf8'))
-  assert.equal(pkg.name, 'dsh-vision-bridge')
-  assert.equal(manifest.id, 'dsh-external/dsh-vision-bridge')
+  assert.equal(pkg.name, 'dsh-deepseek-vision-bridge')
+  assert.equal(manifest.id, 'dsh-external/dsh-deepseek-vision-bridge')
   assert.equal(manifest.version, pkg.version)
   const patch = readFileSync(join(root, 'cordis.patch.yml'), 'utf8')
-  assert.match(patch, /name: 'dsh-vision-bridge'/, 'cordis.patch.yml must mount the package name')
+  assert.match(patch, /name: 'dsh-deepseek-vision-bridge'/, 'cordis.patch.yml must mount the package name')
 })
 
 test('built artifacts exist after a build', async () => {

@@ -1,5 +1,5 @@
 /**
- * tsdown build for dsh-vision-bridge:
+ * tsdown build for dsh-deepseek-vision-bridge:
  *
  * - lib/index.js — the host-half ESM bundle (node). Every runtime import is
  *   a node builtin; services arrive through the Cordis context, so there are
@@ -79,7 +79,7 @@ export default [
     clean: false,
   },
   // client half (browser, module-loader registration) — official bundle channel
-  clientBundle('dsh-vision-bridge', 'client.js'),
+  clientBundle('dsh-deepseek-vision-bridge', 'client.js'),
   // client half — plugin-registry channel (dsh.plugin.json manifest id)
-  clientBundle('dsh-external/dsh-vision-bridge', 'client-registry.js'),
+  clientBundle('dsh-external/dsh-deepseek-vision-bridge', 'client-registry.js'),
 ] as UserConfig[]
