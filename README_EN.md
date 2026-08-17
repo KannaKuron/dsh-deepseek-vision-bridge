@@ -23,6 +23,28 @@ Then **hard-refresh the browser** (Cmd/Ctrl+Shift+R). A DSH restart is only need
 
 > Updating: re-run the same install command (it pulls the repo's latest master).
 
+<details>
+<summary><b>When pnpm blocks the install (supply-chain cooldown / build-script gate)</b></summary>
+
+First-time GitHub installs pass through two pnpm protections, each needing a one-time allow:
+
+1. **`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`** (unrelated to this project): other plugins already in your profile published versions within the last 24h. Add the packages it lists to `~/.dsh/profiles/web/pnpm-workspace.yaml`:
+   ```yaml
+   minimumReleaseAgeExclude:
+     - dsh-better-sidebar
+     - dshmarket
+     # …other packages from the error
+   ```
+2. **`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`** (this project builds on install): add the exact key from the error to the same file:
+   ```yaml
+   allowBuilds:
+     'dsh-deepseek-vision-bridge@git+https://github.com/KannaKuron/dsh-deepseek-vision-bridge.git': true
+   ```
+
+Re-run the install command after both edits. Subsequent installs won't trigger either gate.
+
+</details>
+
 ## Usage
 
 1. Open **Settings → DeepSeek 视觉** and log in (WeChat QR recommended)

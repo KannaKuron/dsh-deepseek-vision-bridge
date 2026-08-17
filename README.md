@@ -29,6 +29,28 @@ npx -y --package @deepseek-ai/dsh dsh plugin --profile web add https://github.co
 
 > 更新:重跑同一条安装命令即可(拉取仓库最新 master)。
 
+<details>
+<summary><b>安装被 pnpm 拦下时(供应链保护 / 构建脚本放行)</b></summary>
+
+首次从 GitHub 安装会经过 pnpm 的两道保护,各需要放行一次:
+
+1. **`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`**(与本项目无关):profile 里已有插件的新版本处于发布后 24h 冷静期。把报错列出的包名加进 `~/.dsh/profiles/web/pnpm-workspace.yaml`:
+   ```yaml
+   minimumReleaseAgeExclude:
+     - dsh-better-sidebar
+     - dshmarket
+     # …报错里列出的其他包
+   ```
+2. **`ERR_PNPM_GIT_DEP_PREPARE_NOT_ALLOWED`**(本项目需要现场构建):按报错给出的精确 key 加入同文件:
+   ```yaml
+   allowBuilds:
+     'dsh-deepseek-vision-bridge@git+https://github.com/KannaKuron/dsh-deepseek-vision-bridge.git': true
+   ```
+
+两处都改完后**重跑同一条安装命令**即可。第二次起不再触发(已装包有缓存)。
+
+</details>
+
 ## 使用
 
 1. 打开 **设置 → DeepSeek 视觉**,选一种方式登录(推荐微信扫码)
