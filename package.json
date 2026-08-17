@@ -63,7 +63,9 @@
     "deepseek",
     "vision",
     "image-analysis",
-    "cordis-plugin"
+    "cordis-plugin",
+    "dsh-plugin",
+    "bridge"
   ],
   "license": "MIT",
   "peerDependencies": {
