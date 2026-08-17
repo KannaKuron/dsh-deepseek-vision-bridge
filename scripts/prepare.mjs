@@ -9,7 +9,8 @@ import { spawnSync } from 'node:child_process'
 // Git source installs (dsh plugin add <repo>) have no devDependencies
 // installed, so a full build is impossible — but lib/ committed or absent,
 // this script must not fail the install when tools are missing.
-const hasTsdown = existsSync('node_modules/.bin/tsdown')
+// Windows note: npm/pnpm shims exist both extensionless (sh) and as .cmd.
+const hasTsdown = existsSync('node_modules/.bin/tsdown') || existsSync('node_modules/.bin/tsdown.cmd')
 if (!hasTsdown) {
   console.log('[dsh-deepseek-vision-bridge prepare] devDependencies absent (source install) — skipping build')
   process.exit(0)
