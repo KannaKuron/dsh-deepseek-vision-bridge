@@ -134,19 +134,33 @@ export function apply(ctx: Context): void {
   }
 
   const credentials = ctx.credentials
+
+  // Quiet-startup logging (v0.2.2): everything routes through the cordis
+  // logger so output respects log levels, routine success is debug-quiet,
+  // and failures stay loud at warn/error. A single info line summarizes
+  // readiness at the end of apply.
+  const logger = ctx.logger
+  const logInfo = (msg: string): void => { logger?.info?.(`[dsv] ${msg}`) }
+  const logDebug = (msg: string): void => { logger?.debug?.(`[dsv] ${msg}`) }
+  const logWarn = (msg: string): void => { logger?.warn?.(`[dsv] ${msg}`) }
+  const logError = (msg: string, e?: unknown): void => {
+    if (e === undefined) logger?.error?.(`[dsv] ${msg}`)
+    else logger?.error?.(`[dsv] ${msg}`, e)
+  }
+
   const persistToken = async (t: string | null): Promise<void> => {
     if (!credentials) return
     try {
       if (t) await credentials.set(TOKEN_REF, t)
       else await credentials.unset(TOKEN_REF)
     } catch (e) {
-      console.error('[dsv] credential set failed:', e)
+      logError('credential set failed', e)
     }
   }
 
   // Startup: restore the token from the credentials service and verify it.
   void (async () => {
-    if (!credentials) { console.error('[dsv] credentials service unavailable — login will not persist'); return }
+    if (!credentials) { logWarn('credentials service unavailable — login will not persist'); return }
     try {
       const hit = await credentials.resolve(TOKEN_REF)
       if (hit && hit.value) {
@@ -154,13 +168,13 @@ export function apply(ctx: Context): void {
         if (r.ok && r.loggedIn) {
           state.token = hit.value
           state.account = r.account ?? null
-          console.log('[dsv] token restored from credentials service')
+          logDebug('token restored from credentials service')
         } else {
           await credentials.unset(TOKEN_REF)
         }
       }
     } catch (e) {
-      console.error('[dsv] token restore failed:', e)
+      logError('token restore failed', e)
     }
   })()
 
@@ -289,13 +303,14 @@ export function apply(ctx: Context): void {
       unpatchLlm = () => {
         try { if (origResolveModelInfo) llm.resolveModelInfo = origResolveModelInfo } catch { /* leave the patch; it reverts on process restart */ }
       }
-      console.log('[dsv] capability patch installed (text-only models now admit image input)')
+      // No success line here: the host-ready summary at the end of apply()
+      // reports whether in-chat images are enabled or disabled.
     } catch (e) {
-      console.error('[dsv] capability patch failed:', e)
+      logError('capability patch failed', e)
       unpatchLlm = null
     }
   } else {
-    console.error('[dsv] llm.resolveModelInfo unavailable — in-chat images disabled, the tool still works')
+    logWarn('llm.resolveModelInfo unavailable — in-chat images disabled, the tool still works')
   }
 
   // ② In-chat images → lazy placeholder cards. The pre-step waterfall swaps
@@ -477,11 +492,11 @@ export function apply(ctx: Context): void {
     try {
       const packageJson = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
       if (!existsSync(packageJson)) {
-        console.log('[dsv] package directory gone (uninstall) — dropping stored token')
+        logInfo('package directory gone (uninstall) — dropping stored token')
         void credentials?.unset(TOKEN_REF).catch(() => { })
       }
     } catch { /* never block disposal */ }
   }, 'dsh-deepseek-vision-bridge: cleanup')
 
-  console.log('[dsv] host ready; in-chat images ' + (llm ? 'enabled' : 'disabled') + ', token persists via credentials service (DSV_USER_TOKEN)')
+  logInfo('host ready; in-chat images ' + (llm ? 'enabled' : 'disabled') + ', token persists via credentials service (DSV_USER_TOKEN)')
 }
