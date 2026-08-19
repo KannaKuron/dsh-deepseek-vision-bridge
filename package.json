@@ -1,6 +1,6 @@
 {
   "name": "dsh-deepseek-vision-bridge",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "DSH plugin (DeepSeek vision bridge): give text-only agents vision through chat.deepseek.com's unofficial vision mode — WeChat-QR/password login in Settings, a deepseek_vision model tool, and automatic in-chat image transcription.",
   "type": "module",
   "repository": {
